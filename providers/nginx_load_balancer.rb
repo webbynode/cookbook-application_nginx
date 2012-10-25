@@ -36,13 +36,16 @@ end
 
 action :before_deploy do
 
+  single = node['nginx']['single_mode']
+  single = true if single.nil?
+
   template "#{node['nginx']['dir']}/sites-available/#{new_resource.application.name}.conf" do
     source new_resource.template ? new_resource.template : "load_balancer.conf.erb"
     cookbook new_resource.template ? new_resource.cookbook_name : "application_nginx"
     owner "root"
     group "root"
     mode "644"
-    variables :resource => new_resource, :hosts => new_resource.find_matching_role(new_resource.application_server_role, false)
+    variables :resource => new_resource, :hosts => new_resource.find_matching_role(new_resource.application_server_role, single)
     notifies :reload, resources(:service => 'nginx')
   end
 
